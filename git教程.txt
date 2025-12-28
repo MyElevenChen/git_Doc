@@ -1,0 +1,57 @@
+1，git init 在本地的文件夹下运行，成功后会出现一个.git文件夹，让他能够进行git的各种操作
+
+git的使用是为了保存项目的历史记录，在必要的时候可以回档，也可以在一个档的基础上往不同方向发展出多种分支，并非只为了连接remote，本地也可以实现这些功能。
+
+2，git add . 给当前项目情况拍照，把情况记录到暂存区，还没有正式记录，但已经是一个伪存档了，可以用于回档。但暂存区只有一个位置
+
+Q：怎么回档？A：git restore --staged  把暂存区的东西放到工作区（前提是还没有下一次add，如果有下一次add就不能这么做，要复杂一点）如果不加--staged，就是把上次commit的东西放到工作区。工作区就是文件管理器能看到的那些文件内容。
+
+Q：那为什么还要commit？A：因为add信息不全，而且找回麻烦，commit会附带时间戳，作者等信息，而且如果要上传到远程仓库，是只能传commit生成的节点的。
+
+3，git add 文件名   只对该文件进行拍照记录
+
+4，git commit -m “描述” -m是用于给commit写描述的，执行这行之后就正式把刚刚add的内容存为本条支线上的一个码头，随时可以回来
+
+Q：怎么看当前是哪条支线？A：git branch展示所有本地分支，带*的就是当前支线
+
+5，git log 输出当前分支下的全部commit记录，包括时间作者描述
+
+6，git switch 分支名   可以切换到其他分支，加个-c：如果分支不存在自动创建。创建新分支的时候，会自动把最近一次commit放进这个分支
+
+
+接下来是和远程仓库相关的操作：
+
+7，git remote add origin https://github.com/user/repo.git 将本地文件夹和指定的远程仓库相关联，建立一个叫做origin的连接，也可以叫别的名字
+
+8，git remote -v  查看已有的远程连接，会把fetch获取信息的通道和push上传信息的通道都显示，一般是一样的，传和下载都是同一个仓库
+
+9，git remote set-url origin 新地址  更改远程仓库，在seturl后面加 --push的话，可以只改push的位置，fetch的不动
+
+10，git remote remove origin  把名为origin的远程连接删除，一般都不用删除，每个文件夹的所有git信息包括远程连接都是独立的
+
+本地的分支名和远程的分支名是不相关的，但是可以将两者通过本地远程追踪文件进行绑定
+
+Q：什么是本地远程追踪名？A：.git文件夹里有一个origin文件夹，里面有远程仓库的各个分支投影到本地的一个本地远程追踪文件，通过把本地分支和这些远程追踪文件绑定，就可以和远程仓库的分支绑定了，要注意远程分支和origin分支的区别，origin分支就是本地远程追踪文件
+
+11，git branch -u origin/main main   把当前分支main和远程main分支绑定
+
+Q：绑定之后的好处？A：见下面命令
+
+12，git push  origin main:main  将本地的main分支的最近一次commit 上传到origin连接里的main分支。如果本地main分支已经与origin的main分支绑定，且当前处于main分支下，可以直接写git push。如果想给远程创建新分支，git push -u origin feature/pay。远程就会出现feature/pay这个新分支，分支里有旧分支至这次push的所有commit，而主分支是没有这次commit的
+
+Q：git push origin main：sb什么意思？A：把本地的main分支的最近一次commit上传到远程的sb分支
+
+13，git pull origin foo:dev   把远程foo分支取出来，并更新origin/dev这一本地远程追踪文件，如果没有dev文件，会自动创建一个(从此以后，origin/dev就是foo文件的本地远程追踪文件）。然后，把origin/dev里的内容和当前分支的最后一次commit的内容合并，合并完放到工作区。
+
+Q：合并的概念？A：不是替换，也不是覆盖，而是把两个的东西加在一起，如果有冲突的，会进行询问。在实际的合作中，假设每个人各负责一个函数的实现，那么是可以成功合并到一起的，我写完上传，然后你下载，并不冲突。具体机制复杂。
+
+14，git fetch origin dev  把origin里的dev分支更新到最新，fetch是在合作时才用到的，别人上传到origin，你本地是不知道的，要用fetch把github上的新东西下过来，才能知道。如果去掉dev，就默认所有分支都更新。而且，绑定对fetch是没有影响的，fetch涉及的是本地远程追踪文件的更新，而绑定涉及的是本地当前分支和远程分支，二者无关。
+
+Q：如果我想让别人也能上传到我的仓库，怎么搞？A：要先在github把那个人拉入我这个仓库的共创成员名单。
+
+Q：如果我想在别人的电脑上用命令行上传到我的仓库但是显示别人的账户没有权限，怎么切换到我自己的账户？
+A：
+首先，浏览器登github账户为 elevenchen → Settings → Developer settings → Personal access tokens → Generate new token (classic)，权限勾选 repo → 复制 token（token类似于密码，是密码的替代物）
+然后，回到电脑，把旧 token 替掉：
+控制面板 → 凭据管理器 → Windows 凭据 → 找到 git:https://github.com → 编辑 → 用户名填 elevenchen，密码填刚复制的 token → 保存。
+现在可以重新push了，会让你输入token，输入刚刚复制的那个即可。
